@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/estilo.css" />
+    <title>Gerenciamento de Eventos</title>
+</head>
+
+<body>
+    <div style="display: flex; justify-content: center; width: 100%;">
+        <ul
+            style="display: flex; flex-direction: row; justify-content: space-between; margin: 8px; border: solid 1px black; width: 100%; padding: 8px; list-style: none;">
+            <li><a href="eventos.html">Eventos Disponíveis</a></li>
+            <li><a href="meusEventos.html">Minha Lista de Eventos</a></li>
+            <li><a href="login.html">Sair</a>
+        </ul>
+    </div>
+
+    <h1>Gerenciamento de Eventos</h1>
+
+    <table id="eventosTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Data</th>
+                <th>Local</th>
+                <th>R$ ingresso</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <h2>Cadastrar Novo Evento</h2>
+    <form id="eventoForm">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required><br><br>
+
+        <label for="detalhes">Detalhes:</label>
+        <textarea id="detalhes" name="detalhes" required></textarea><br><br>
+
+        <label for="data">Data:</label>
+        <input type="date" id="data" name="data" required><br><br>
+
+        <label for="local">Local:</label>
+        <input type="text" id="local" name="local" required><br><br>
+
+        <label for="numIngressos">Número de Ingressos:</label>
+        <input type="number" id="numIngressos" name="numIngressos" required><br><br>
+
+        <label for="valorIngresso">Valor:</label>
+        <input type="text" id="valorIngresso" name="valorIngresso" required><br><br>
+
+        <button type="submit">Cadastrar Evento</button>
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const eventosTableBody = document.querySelector("#eventosTable tbody");
+            const eventoForm = document.getElementById("eventoForm");
+            let eventoEditandoId = null;  // Variável para armazenar o ID do evento que está sendo editado
+
+            function loadEventos() {
+                const eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+                eventosTableBody.innerHTML = "";
+                eventos.forEach(evento => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                <td>${evento.id}</td>
+                <td>${evento.nome}</td>
+                <td>${evento.data}</td>
+                <td>${evento.local}</td>
+                <td>${evento.valorIngresso}</td>
+                <td class="actions">
+                    <button onclick="acessarEvento(${evento.id})">+ Detalhes</button>
+                    <button onclick="editarEvento(${evento.id})">Editar</button>
+                    <button onclick="excluirEvento(${evento.id})">Excluir</button>
+                </td>
+            `;
+                    eventosTableBody.appendChild(row);
+                });
+            }
+
+            eventoForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                const nome = document.getElementById("nome").value;
+                const detalhes = document.getElementById("detalhes").value;
+                const data = document.getElementById("data").value;
+                const local = document.getElementById("local").value;
+                const numIngressos = document.getElementById("numIngressos").value;
+                const valorIngresso = document.getElementById("valorIngresso").value;
+
+                const eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+
+                if (eventoEditandoId !== null) {
+                    // Atualiza o evento existente
+                    const evento = eventos.find(evento => evento.id === eventoEditandoId);
+                    evento.nome = nome;
+                    evento.detalhes = detalhes;
+                    evento.data = data;
+                    evento.local = local;
+                    evento.numIngressos = numIngressos;
+                    evento.valorIngresso = valorIngresso;
+
+                    eventoEditandoId = null;  // Resetar o modo de edição
+                } else {
+                    // Criar um novo evento
+                    const newId = eventos.length ? eventos[eventos.length - 1].id + 1 : 1;
+                    const novoEvento = {
+                        id: newId,
+                        nome,
+                        detalhes,
+                        data,
+                        local,
+                        numIngressos,
+                        valorIngresso
+                    };
+                    eventos.push(novoEvento);
+                }
+
+                localStorage.setItem("eventos", JSON.stringify(eventos));
+                loadEventos();
+                eventoForm.reset();
+            });
+
+            window.editarEvento = function (id) {
+                const eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+                const evento = eventos.find(evento => evento.id === id);
+                if (evento) {
+                    document.getElementById("nome").value = evento.nome;
+                    document.getElementById("detalhes").value = evento.detalhes;
+                    document.getElementById("data").value = evento.data;
+                    document.getElementById("local").value = evento.local;
+                    document.getElementById("numIngressos").value = evento.numIngressos;
+                    document.getElementById("valorIngresso").value = evento.valorIngresso;
+
+                    eventoEditandoId = id;  // Define o ID do evento sendo editado
+                }
+            };
+
+            window.acessarEvento = function (id) {
+                const eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+                const evento = eventos.find(evento => evento.id === id);
+                if (evento) {
+                    localStorage.setItem("eventoAtual", JSON.stringify(evento));
+                    window.location.href = "detalhesEvento.html";
+                }
+            };
+
+            window.excluirEvento = function (id) {
+                let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+                eventos = eventos.filter(evento => evento.id !== id);
+                localStorage.setItem("eventos", JSON.stringify(eventos));
+                loadEventos();
+            };
+
+            loadEventos();
+        });
+
+    </script>
+</body>
+
+</html>
